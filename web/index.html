@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neural Texture Compression</title>
+  <style>
+    :root { --bg: #111318; --fg: #e8eaf0; --muted: #9aa0ad; --accent: #7fb2ff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; display: flex; flex-direction: column; height: 100vh; }
+    header { padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; border-bottom: 1px solid #2a2e38; }
+    h1 { font-size: 16px; margin: 0; }
+    #stats, #benchOut, .hint { color: var(--muted); }
+    label { display: flex; gap: 6px; align-items: center; }
+    select, button { background: #1d2029; color: var(--fg); border: 1px solid #353a47; border-radius: 6px; padding: 4px 8px; }
+    button { cursor: pointer; }
+    canvas { flex: 1; width: 100%; min-height: 0; display: block; touch-action: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Neural Texture Compression</h1>
+    <span id="stats">Loading…</span>
+    <label>View
+      <select id="mode">
+        <option value="0">Lit</option><option value="1">Albedo</option><option value="2">Normal</option>
+        <option value="3">Roughness</option><option value="4">|Error| albedo ×8</option>
+      </select>
+    </label>
+    <label>Original ⟷ Neural <input id="split" type="range" min="0" max="100" value="50"></label>
+    <label><input id="animate" type="checkbox" checked> Animate light</label>
+    <button id="bench">Benchmark</button><span id="benchOut"></span>
+    <span class="hint">Wheel: zoom · drag: pan · shift+drag: move split</span>
+  </header>
+  <canvas id="canvas"></canvas>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
