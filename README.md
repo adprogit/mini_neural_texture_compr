@@ -4,16 +4,22 @@
 > A full PBR material (albedo, normal, roughness, AO…) is compressed jointly into two quantized latent grids + one tiny MLP, and decoded **per pixel on the GPU** (WebGPU).
 
 ![WebGPU viewer, lit view: original maps (left) vs neural decode at 2.59 bpp (right)](docs/viewer.jpg)
+*"Lit" view, zoom ×2, 1600×800. Left of the line: original maps; right: neural decode (4-bit latents, 2.59 bpp).*
+
+![Close-up at zoom ×6: albedo view (original | neural) and the "|Error| albedo ×8" view](docs/closeup.jpg)
+*Zoom ×6. Left: "Albedo" view, original | neural. Right: "|Error| albedo ×8" view. The error concentrates
+on board seams and fine grain, which the 1/4- and 1/8-resolution latents smooth out.*
 <!-- TODO: link to the live demo on the portfolio -->
 
 ## Why this matters
 Block compression formats (BC7, ASTC) encode every texture of a material separately, at a fixed rate
 (8 bpp for BC7). Yet the albedo, normal, roughness and AO of one material are strongly correlated.
 Neural texture compression encodes all of them jointly in shared latents and a small per-material
-decoder, reaching higher quality at a lower bit rate while keeping random access, which is the property
-GPUs need for texture sampling. The idea is moving towards production: NVIDIA ships it as the
-[RTX Neural Texture Compression SDK](https://github.com/NVIDIA-RTX/RTXNTC) (still in beta as of
-September 2026).
+decoder while keeping random access, which is the property GPUs need for texture sampling. The paper
+reports higher quality than BC-style formats at lower bit rates (this repo does not compare against BC7
+yet: see Results). The idea is moving towards production: NVIDIA ships it as the
+[RTX Neural Texture Compression SDK](https://github.com/NVIDIA-RTX/RTXNTC) (latest release v0.10.0,
+still labelled beta, August 2026).
 
 ## Method
 - **Input**: one material, `C` channels stacked (e.g. albedo 3 + normal 3 + roughness 1 + AO 1 = 8).
@@ -52,8 +58,28 @@ upsamples it bilinearly. PSNR in dB.
 At 4 bits the neural codec beats the baseline by +4.7 dB overall (+4.4 dB on albedo). At 2 bits the gap
 shrinks to +0.7 dB. BC7 is not compared yet (no encoder in the pipeline).
 
-Decode cost: `__ ms / frame` at 1080p on `<GPU>` (viewer "Benchmark" button: 100 full decodes, every
-pixel runs the MLP, coarse CPU-side timing).
+### Rate–distortion
+
+![PSNR vs bits per pixel for six neural configurations and the downsample baseline](docs/rate_distortion.png)
+
+| Config (`--feats` / `--scales` / `--bits`) | bpp | PSNR all (dB) | Baseline, same bpp (dB) | Gain |
+|---|---|---|---|---|
+| 4+4 / 4 8 / 2-bit | 0.71 | 34.50 | 33.10 | +1.4 |
+| 8+8 / 8 16 / 4-bit | 0.71 | 36.03 | 33.12 | +2.9 |
+| 4+4 / 4 8 / 4-bit | 1.33 | 38.39 | 33.58 | +4.8 |
+| 8+8 / 4 8 / 2-bit | 1.34 | 34.28 | 33.58 | +0.7 |
+| 8+8 / 4 8 / 4-bit (demo) | 2.59 | 38.92 | 34.20 | +4.7 |
+| 8+8 / 4 8 / 8-bit | 5.09 | 42.35 | 35.00 | +7.4 |
+
+At a fixed budget, **latent precision matters more than latent count**. At ~1.33 bpp, 4 features at
+4 bits reach 38.4 dB, versus 34.3 dB for 8 features at 2 bits. At ~0.71 bpp, coarser grids at 4 bits
+(36.0 dB) beat fewer features at 2 bits (34.5 dB). With this QAT scheme, 2-bit quantization is where
+quality collapses.
+
+Decode cost: **67.3 ms / frame at 1080p on an Intel Iris Xe** (integrated laptop GPU), measured with the
+viewer's "Benchmark" button: 100 full decodes where every pixel runs the MLP, coarse CPU-side timing.
+That is 2.07 M pixels × 5,632 multiply-adds ≈ 23 GFLOP per frame, or ~350 GFLOP/s effective in fp32.
+The viewer stays interactive because it caches the decode and only re-runs it on zoom / pan / resize.
 
 ## Differences from the paper (honest scope)
 - No mip-mapping: the paper trains one latent pyramid for all mip levels — here level 0 only.
@@ -66,18 +92,24 @@ pixel runs the MLP, coarse CPU-side timing).
 - Mip levels: one latent pyramid for the whole mip chain, as in the paper.
 - Texture filtering: stochastic / anisotropic filtering of decoded texels (only bilinear latents today).
 - Faster inference: f16 packed weights, cooperative-vector / tensor-core matrix ops where available.
-- Real baselines: BC7 / ASTC at matched bit rates, and a rate–distortion curve over `--bits`, `--feats`, `--scales`.
+- Real baselines: BC7 / ASTC at matched bit rates; more materials than one wood floor.
 - Compare with follow-up work and with the [RTXNTC SDK](https://github.com/NVIDIA-RTX/RTXNTC).
 <!-- TODO: cite 1–3 follow-up papers you actually read. -->
 
 ## Run it
+The trained demo data is committed in `web/data/`, so the viewer runs without training:
 ```bash
-pip install -r requirements.txt
-# one material folder (e.g. ambientCG 2K PNG): keep ONE normal map (GL convention)
-python train.py --material path/to/Material_2K --res 1024 --bits 4 --out web/data
 python -m http.server -d web 8000        # then open http://localhost:8000 (Chrome/Edge, WebGPU)
 ```
-Smoke test without data: `python train.py --synthetic --res 256 --steps 300 --out web/data`.
+To retrain, download [WoodFloor051 (2K-JPG)](https://ambientcg.com/view?id=WoodFloor051) from ambientCG
+(CC0) and unzip it into `2ktexture/` (any material folder with ONE normal map, GL convention, works):
+```bash
+uv sync
+uv run train.py --material 2ktexture --res 1024 --bits 4 --out web/data
+```
+The viewer is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push that touches `web/`.
+
+Smoke test without data: `uv run train.py --synthetic --res 256 --steps 300 --out /tmp/ntc_test`.
 
 ## Reference
 K. Vaidyanathan, M. Salvi, B. Wronski, T. Akenine-Möller, P. Ebelin, A. Lefohn.

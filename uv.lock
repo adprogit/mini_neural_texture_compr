@@ -178,7 +178,7 @@ wheels = [
 [[package]]
 name = "neural-texture-compression"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "numpy" },
     { name = "pillow" },

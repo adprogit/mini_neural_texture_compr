@@ -1,0 +1,83 @@
+{
+  "res": 1024,
+  "channels": 8,
+  "layout": [
+    {
+      "name": "WoodFloor051_2K-JPG_AmbientOcclusion",
+      "start": 0,
+      "count": 1
+    },
+    {
+      "name": "WoodFloor051_2K-JPG_Color",
+      "start": 1,
+      "count": 3
+    },
+    {
+      "name": "WoodFloor051_2K-JPG_NormalGL",
+      "start": 4,
+      "count": 3
+    },
+    {
+      "name": "WoodFloor051_2K-JPG_Roughness",
+      "start": 7,
+      "count": 1
+    }
+  ],
+  "bits": 4,
+  "grids": [
+    {
+      "file": "grid0.bin",
+      "width": 256,
+      "height": 256,
+      "layers": 2
+    },
+    {
+      "file": "grid1.bin",
+      "width": 128,
+      "height": 128,
+      "layers": 2
+    }
+  ],
+  "mlp": [
+    {
+      "in": 16,
+      "out": 64
+    },
+    {
+      "in": 64,
+      "out": 64
+    },
+    {
+      "in": 64,
+      "out": 8
+    }
+  ],
+  "metrics": {
+    "bpp": 2.5880126953125,
+    "uncompressed_bpp": 64,
+    "psnr_all": 38.920015112553166,
+    "baseline_downsample_res": [
+      206,
+      206
+    ],
+    "baseline_psnr_all": 34.199676262164,
+    "per_map": {
+      "WoodFloor051_2K-JPG_AmbientOcclusion": {
+        "neural": 40.40139185903544,
+        "downsample": 32.37196073467211
+      },
+      "WoodFloor051_2K-JPG_Color": {
+        "neural": 36.74650197103422,
+        "downsample": 32.348958357800846
+      },
+      "WoodFloor051_2K-JPG_NormalGL": {
+        "neural": 44.69857959753366,
+        "downsample": 42.68367595808597
+      },
+      "WoodFloor051_2K-JPG_Roughness": {
+        "neural": 37.02360016154,
+        "downsample": 32.56388606624357
+      }
+    }
+  }
+}

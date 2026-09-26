@@ -1,7 +1,7 @@
 [project]
 name = "neural-texture-compression"
 version = "0.1.0"
-description = "Add your description here"
+description = "Neural compression of PBR material textures (PyTorch training) with real-time per-pixel WebGPU decoding"
 readme = "README.md"
 authors = [
     { name = "mno", email = "alex.dreau@epita.fr" }
@@ -12,10 +12,3 @@ dependencies = [
     "pillow>=12.3.0",
     "torch>=2.14.0",
 ]
-
-[project.scripts]
-neural-texture-compression = "neural_texture_compression:main"
-
-[build-system]
-requires = ["uv_build>=0.12.15,<0.13.0"]
-build-backend = "uv_build"

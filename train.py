@@ -8,7 +8,7 @@ Simplified re-implementation of the core idea of:
 A PBR material (all channels stacked: albedo, normal, roughness, AO, ...) is
 represented by two low-resolution latent feature grids + one small MLP shared
 by every texel. Decoding one texel = 2 bilinear lookups + a tiny MLP, so it can
-run per-pixel in a fragment shader (see web/decode.wgsl).
+run per-pixel on the GPU (see web/decode.wgsl).
 
 Usage:
   python train.py --material path/to/material_folder --res 1024 --out web/data

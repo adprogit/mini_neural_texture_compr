@@ -1,3 +1,4 @@
-web/data/
 __pycache__/
 *.pyc
+*:Zone.Identifier
+2ktexture/
